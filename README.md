@@ -1,4 +1,4 @@
-# employee_rolling_system
+# employee_Payroll_system
 📘 Overview
 
 This is a simple Employee Payroll Management System written in C.
