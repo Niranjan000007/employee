@@ -1,12 +1,10 @@
-// employee.c
 #include "employee.h"
 
 float calculateGross(float basic, float hra, float deductions) {
     return basic + hra - deductions;
 }
 
-int addEmployee(int ids[], char names[][50], float basicSalary[],
-                float hra[], float deductions[], float grossSalary[], int count) {
+int addEmployee(Employee emp[], int count) {
 
     if (count >= MAX) {
         printf("Error: Maximum employee limit reached!\n");
@@ -14,31 +12,30 @@ int addEmployee(int ids[], char names[][50], float basicSalary[],
     }
 
     printf("\nEnter Employee ID: ");
-    scanf("%d", &ids[count]);
-    getchar(); // clear leftover newline
+    scanf("%d", &emp[count].id);
+    getchar();
 
     printf("Enter Name : ");
-    fgets(names[count], sizeof(names[count]), stdin);
-    names[count][strcspn(names[count], "\n")] = 0;
+    fgets(emp[count].name, sizeof(emp[count].name), stdin);
+    emp[count].name[strcspn(emp[count].name, "\n")] = 0;
 
     printf("Enter Basic Salary: ");
-    scanf("%f", &basicSalary[count]);
+    scanf("%f", &emp[count].basicSalary);
 
     printf("Enter HRA: ");
-    scanf("%f", &hra[count]);
+    scanf("%f", &emp[count].hra);
 
     printf("Enter Deductions: ");
-    scanf("%f", &deductions[count]);
+    scanf("%f", &emp[count].deductions);
 
-    grossSalary[count] = calculateGross(basicSalary[count], hra[count], deductions[count]);
+    emp[count].grossSalary = calculateGross(emp[count].basicSalary, emp[count].hra, emp[count].deductions);
 
     printf("\n✅ Employee added successfully!\n");
 
     return count + 1;
 }
 
-void displayEmployees(int ids[], char names[][50], float basicSalary[],
-                      float hra[], float deductions[], float grossSalary[], int count) {
+void displayEmployees(Employee emp[], int count) {
 
     if (count == 0) {
         printf("\nNo employee records found!\n");
@@ -51,8 +48,8 @@ void displayEmployees(int ids[], char names[][50], float basicSalary[],
 
     for (int i = 0; i < count; i++) {
         printf("%-5d %-20s %-10.2f %-10.2f %-10.2f %-10.2f\n",
-               ids[i], names[i], basicSalary[i],
-               hra[i], deductions[i], grossSalary[i]);
+               emp[i].id, emp[i].name, emp[i].basicSalary,
+               emp[i].hra, emp[i].deductions, emp[i].grossSalary);
     }
 }
 

@@ -2,12 +2,7 @@
 #include "employee.h"
 
 int main() {
-    int ids[MAX];
-    char names[MAX][50];
-    float basicSalary[MAX];
-    float hra[MAX];
-    float deductions[MAX];
-    float grossSalary[MAX];
+    Employee emp[MAX];
     int count = 0;
     int choice;
 
@@ -15,13 +10,13 @@ int main() {
         choice = menu();
 
         if (choice == 1) {
-            count = addEmployee(ids, names, basicSalary, hra, deductions, grossSalary, count);
+            count = addEmployee(emp, count);
         }
         else if (choice == 2) {
-            displayEmployees(ids, names, basicSalary, hra, deductions, grossSalary, count);
+            displayEmployees(emp, count);
         }
         else if (choice == 3) {
-            printf("\nExiting... Goodbye!\n");
+            printf("\nExit\n");
             break;
         }
         else {
