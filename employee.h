@@ -6,7 +6,6 @@
 
 #define MAX 100
 
-// Structure for employee
 typedef struct {
     int id;
     char name[50];
@@ -18,8 +17,8 @@ typedef struct {
 
 int menu();
 float calculateGross(float basic, float hra, float deductions);
-int addEmployee(Employee emp[], int count);
-void displayEmployees(Employee emp[], int count);
+int addEmployee(Employee emp[], int count);      // writes to file directly
+void displaySavedFile();                         // reads from file
 
 #endif
 

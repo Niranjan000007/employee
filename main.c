@@ -1,4 +1,3 @@
-// main.c
 #include "employee.h"
 
 int main() {
@@ -13,17 +12,16 @@ int main() {
             count = addEmployee(emp, count);
         }
         else if (choice == 2) {
-            displayEmployees(emp, count);
+            displaySavedFile();
         }
         else if (choice == 3) {
-            printf("\nExit\n");
+            printf("\nExiting program...\n");
             break;
         }
         else {
-            printf("Invalid choice! Please try again.\n");
+            printf("Invalid choice!\n");
         }
     }
 
     return 0;
 }
-
