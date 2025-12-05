@@ -65,10 +65,19 @@ int addEmployee(Employee emp[], int count) {
         while (!readInt(&tempID))
             printf("Invalid ID. Enter again: ");
 
-        if (idExists(emp, count, tempID))
-            printf("ID exists! Enter a new ID: ");
-        else
-            break;
+        // NEW: enforce ID range 1–100
+        if (tempID < 1 || tempID > 100) {
+            printf("ID must be between 1 and 100. Enter again: ");
+            continue;
+        }
+
+        // Duplicate ID check
+        if (idExists(emp, count, tempID)) {
+            printf("ID already exists! Enter a new ID: ");
+            continue;
+        }
+
+        break;
     }
 
     emp[count].id = tempID;
@@ -120,7 +129,7 @@ int addEmployee(Employee emp[], int count) {
 void saveAllToFile(Employee emp[], int count) {
     FILE *fp = fopen("employees.txt", "w");
     if (!fp) {
-        printf("Error opening file!\n");
+        perror("File error");
         return;
     }
 
