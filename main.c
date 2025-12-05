@@ -8,19 +8,25 @@ int main() {
     while (1) {
         choice = menu();
 
-        if (choice == 1) {
+        if (choice == 1)
             count = addEmployee(emp, count);
-        }
-        else if (choice == 2) {
+
+        else if (choice == 2)
             displaySavedFile();
-        }
-        else if (choice == 3) {
-            printf("\nExiting program...\n");
+
+        else if (choice == 3)
+            count = deleteEmployee(emp, count);
+
+        else if (choice == 4)
+            count = updateEmployee(emp, count);
+
+        else if (choice == 5) {
+            printf("Exiting...\n");
             break;
         }
-        else {
+
+        else
             printf("Invalid choice!\n");
-        }
     }
 
     return 0;

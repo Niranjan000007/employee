@@ -17,8 +17,10 @@ typedef struct {
 
 int menu();
 float calculateGross(float basic, float hra, float deductions);
-int addEmployee(Employee emp[], int count);      // writes to file directly
-void displaySavedFile();                         // reads from file
+int addEmployee(Employee emp[], int count);
+void displaySavedFile();
+int deleteEmployee(Employee emp[], int count);
+int updateEmployee(Employee emp[], int count);
+void saveAllToFile(Employee emp[], int count);
 
 #endif
-
