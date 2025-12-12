@@ -4,7 +4,26 @@
 #include <stdio.h>
 #include <string.h>
 
+<<<<<<< HEAD
 /* safe integer reader (only positive integers) */
+=======
+static int readInt(int *value);
+static int readFloat(float *value);
+
+// Check if ID exists
+static int idExists(Employee emp[], int count, int id) {
+    for (int i = 0; i < count; i++)
+        if (emp[i].id == id)
+            return 1;
+    return 0;
+}
+
+float calculateGross(float basic, float hra, float deductions) {
+    return basic + hra - deductions;
+}
+
+// ------------------ SAFE INPUT ------------------
+>>>>>>> 7014e7b104ecdcd7290138e799f5a54e7d12761d
 static int readInt(int *value) {
     char buf[100];
     if (!fgets(buf, sizeof(buf), stdin)) return 0;
@@ -13,12 +32,17 @@ static int readInt(int *value) {
     if (len == 0) return 0;
 
     for (int i = 0; i < len; i++)
+<<<<<<< HEAD
         if (!isdigit((unsigned char)buf[i])) return 0;
+=======
+        if (!isdigit(buf[i])) return 0;
+>>>>>>> 7014e7b104ecdcd7290138e799f5a54e7d12761d
 
     *value = atoi(buf);
     return 1;
 }
 
+<<<<<<< HEAD
 /* Check if ID exists */
 static int idExists(Employee emp[], int count, int id) {
     for (int i = 0; i < count; i++)
@@ -33,6 +57,28 @@ unsigned int calculateGross(unsigned int basic, unsigned int hra, unsigned int d
     if (deductions >= total) return 0;
     return total - deductions;
 }
+=======
+static int readFloat(float *value) {
+    char buf[100];
+    int dots = 0;
+
+    if (!fgets(buf, sizeof(buf), stdin)) return 0;
+    int len = strcspn(buf, "\n");
+    if (len == 0) return 0;
+
+    for (int i = 0; i < len; i++) {
+        if (buf[i] == '.') { dots++; continue; }
+        if (!isdigit(buf[i])) return 0;
+    }
+    if (dots > 1) return 0;
+
+    *value = atof(buf);
+    return 1;
+}
+
+// ------------------ ADD EMPLOYEE ------------------
+int addEmployee(Employee emp[], int count) {
+>>>>>>> 7014e7b104ecdcd7290138e799f5a54e7d12761d
 
 /* ------------------ LOAD FROM FILE ------------------ */
 /* Expected line format:
@@ -121,13 +167,21 @@ int addEmployee(Employee emp[], int count) {
         while (!readInt(&tempID))
             printf("Invalid ID. Enter again: ");
 
+<<<<<<< HEAD
         /* enforce ID range 1–100 */
+=======
+        // NEW: enforce ID range 1–100
+>>>>>>> 7014e7b104ecdcd7290138e799f5a54e7d12761d
         if (tempID < 1 || tempID > 100) {
             printf("ID must be between 1 and 100. Enter again: ");
             continue;
         }
 
+<<<<<<< HEAD
         /* Duplicate ID check */
+=======
+        // Duplicate ID check
+>>>>>>> 7014e7b104ecdcd7290138e799f5a54e7d12761d
         if (idExists(emp, count, tempID)) {
             printf("ID already exists! Enter a new ID: ");
             continue;
@@ -138,6 +192,7 @@ int addEmployee(Employee emp[], int count) {
 
     emp[count].id = tempID;
 
+<<<<<<< HEAD
     /* Name input (allow spaces). Remove min length requirement. Keep alpha + space validation. */
     while (1) {
         printf("Enter Name: ");
@@ -146,18 +201,36 @@ int addEmployee(Employee emp[], int count) {
         } else {
             emp[count].name[strcspn(emp[count].name, "\n")] = '\0';
         }
+=======
+    // Name validation
+    while (1) {
+        printf("Enter Name (min 8 chars): ");
+        fgets(emp[count].name, sizeof(emp[count].name), stdin);
+        emp[count].name[strcspn(emp[count].name, "\n")] = 0;
+>>>>>>> 7014e7b104ecdcd7290138e799f5a54e7d12761d
 
+        int len = strlen(emp[count].name);
         int valid = 1;
+<<<<<<< HEAD
         if (emp[count].name[0] == '\0') valid = 0;
 
         for (int i = 0; emp[count].name[i]; i++) {
             if (!isalpha((unsigned char)emp[count].name[i]) && emp[count].name[i] != ' ') {
+=======
+
+        if (len < 8) valid = 0;
+        if (len == 0) valid = 0;
+
+        for (int i = 0; emp[count].name[i]; i++)
+            if (!isalpha(emp[count].name[i]) && emp[count].name[i] != ' ')
+>>>>>>> 7014e7b104ecdcd7290138e799f5a54e7d12761d
                 valid = 0;
                 break;
             }
         }
 
         if (valid) break;
+<<<<<<< HEAD
         printf("Invalid name! Use only letters and spaces.\n");
     }
 
@@ -177,6 +250,22 @@ int addEmployee(Employee emp[], int count) {
     while (!readInt(&tmp))
         printf("Invalid! Enter again: ");
     emp[count].deductions = (unsigned int)tmp;
+=======
+        printf("Invalid name!\n");
+    }
+
+    printf("Enter Basic Salary: ");
+    while (!readFloat(&emp[count].basicSalary))
+        printf("Invalid! Enter again: ");
+
+    printf("Enter HRA: ");
+    while (!readFloat(&emp[count].hra))
+        printf("Invalid! Enter again: ");
+
+    printf("Enter Deductions: ");
+    while (!readFloat(&emp[count].deductions))
+        printf("Invalid! Enter again: ");
+>>>>>>> 7014e7b104ecdcd7290138e799f5a54e7d12761d
 
     emp[count].grossSalary = calculateGross(emp[count].basicSalary,
                                            emp[count].hra,
@@ -188,7 +277,32 @@ int addEmployee(Employee emp[], int count) {
     return count + 1;
 }
 
+<<<<<<< HEAD
 /* ------------------ DELETE EMPLOYEE ------------------ */
+=======
+// ------------------ SAVE ENTIRE DATA ------------------
+void saveAllToFile(Employee emp[], int count) {
+    FILE *fp = fopen("employees.txt", "w");
+    if (!fp) {
+        perror("File error");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        fprintf(fp, "%d %s %.2f %.2f %.2f %.2f\n",
+                emp[i].id,
+                emp[i].name,
+                emp[i].basicSalary,
+                emp[i].hra,
+                emp[i].deductions,
+                emp[i].grossSalary);
+    }
+
+    fclose(fp);
+}
+
+// ------------------ DELETE EMPLOYEE ------------------
+>>>>>>> 7014e7b104ecdcd7290138e799f5a54e7d12761d
 int deleteEmployee(Employee emp[], int count) {
     if (count == 0) {
         printf("No employees to delete.\n");
@@ -219,7 +333,11 @@ int deleteEmployee(Employee emp[], int count) {
     return count - 1;
 }
 
+<<<<<<< HEAD
 /* ------------------ UPDATE EMPLOYEE ------------------ */
+=======
+// ------------------ UPDATE EMPLOYEE ------------------
+>>>>>>> 7014e7b104ecdcd7290138e799f5a54e7d12761d
 int updateEmployee(Employee emp[], int count) {
     if (count == 0) {
         printf("No employees to update.\n");
@@ -251,6 +369,7 @@ int updateEmployee(Employee emp[], int count) {
     while (!readInt(&choice))
         printf("Invalid! Enter again: ");
 
+<<<<<<< HEAD
     /* --------- UPDATE NAME --------- */
     if (choice == 1 || choice == 2) {
         while (1) {
@@ -295,6 +414,48 @@ int updateEmployee(Employee emp[], int count) {
     emp[index].grossSalary = calculateGross(emp[index].basicSalary,
                                            emp[index].hra,
                                            emp[index].deductions);
+=======
+    // --------- UPDATE NAME ---------
+    if (choice == 1 || choice == 2) {
+        while (1) {
+            printf("Enter new Name (min 8 chars): ");
+            fgets(emp[index].name, sizeof(emp[index].name), stdin);
+            emp[index].name[strcspn(emp[index].name, "\n")] = 0;
+
+            int len = strlen(emp[index].name);
+            int valid = 1;
+
+            if (len < 8) valid = 0;
+
+            for (int i = 0; emp[index].name[i]; i++)
+                if (!isalpha(emp[index].name[i]) && emp[index].name[i] != ' ')
+                    valid = 0;
+
+            if (valid) break;
+            printf("Invalid name!\n");
+        }
+    }
+
+    // --------- UPDATE SALARY FIELDS ---------
+    if (choice == 1 || choice == 3) {
+        printf("Enter Basic Salary: ");
+        while (!readFloat(&emp[index].basicSalary))
+            printf("Invalid! Enter again: ");
+
+        printf("Enter HRA: ");
+        while (!readFloat(&emp[index].hra))
+            printf("Invalid! Enter again: ");
+
+        printf("Enter Deductions: ");
+        while (!readFloat(&emp[index].deductions))
+            printf("Invalid! Enter again: ");
+    }
+
+    emp[index].grossSalary =
+        calculateGross(emp[index].basicSalary,
+                       emp[index].hra,
+                       emp[index].deductions);
+>>>>>>> 7014e7b104ecdcd7290138e799f5a54e7d12761d
 
     saveAllToFile(emp, count);
 
@@ -303,7 +464,11 @@ int updateEmployee(Employee emp[], int count) {
     return count;
 }
 
+<<<<<<< HEAD
 /* ------------------ DISPLAY FILE ------------------ */
+=======
+// ------------------ DISPLAY FILE ------------------
+>>>>>>> 7014e7b104ecdcd7290138e799f5a54e7d12761d
 void displaySavedFile() {
     FILE *fp = fopen("employees.txt", "r");
 
