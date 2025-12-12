@@ -1,23 +1,10 @@
 #include "employee.h"
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
-static int readInt(int *value);
-static int readFloat(float *value);
-
-// Check if ID exists
-static int idExists(Employee emp[], int count, int id) {
-    for (int i = 0; i < count; i++)
-        if (emp[i].id == id)
-            return 1;
-    return 0;
-}
-
-float calculateGross(float basic, float hra, float deductions) {
-    return basic + hra - deductions;
-}
-
-// ------------------ SAFE INPUT ------------------
+/* safe integer reader (only positive integers) */
 static int readInt(int *value) {
     char buf[100];
     if (!fgets(buf, sizeof(buf), stdin)) return 0;
@@ -26,33 +13,102 @@ static int readInt(int *value) {
     if (len == 0) return 0;
 
     for (int i = 0; i < len; i++)
-        if (!isdigit(buf[i])) return 0;
+        if (!isdigit((unsigned char)buf[i])) return 0;
 
     *value = atoi(buf);
     return 1;
 }
 
-static int readFloat(float *value) {
-    char buf[100];
-    int dots = 0;
-
-    if (!fgets(buf, sizeof(buf), stdin)) return 0;
-    int len = strcspn(buf, "\n");
-    if (len == 0) return 0;
-
-    for (int i = 0; i < len; i++) {
-        if (buf[i] == '.') { dots++; continue; }
-        if (!isdigit(buf[i])) return 0;
-    }
-    if (dots > 1) return 0;
-
-    *value = atof(buf);
-    return 1;
+/* Check if ID exists */
+static int idExists(Employee emp[], int count, int id) {
+    for (int i = 0; i < count; i++)
+        if (emp[i].id == id)
+            return 1;
+    return 0;
 }
 
-// ------------------ ADD EMPLOYEE ------------------
-int addEmployee(Employee emp[], int count) {
+/* calculate gross safely (avoid unsigned underflow) */
+unsigned int calculateGross(unsigned int basic, unsigned int hra, unsigned int deductions) {
+    unsigned int total = basic + hra;
+    if (deductions >= total) return 0;
+    return total - deductions;
+}
 
+/* ------------------ LOAD FROM FILE ------------------ */
+/* Expected line format:
+   id "Name with spaces" basic hra deductions gross
+   Example:
+   12 "Niranjan Kumar" 30000 4000 1000 33000
+*/
+int loadFromFile(Employee emp[]) {
+    FILE *fp = fopen("employees.txt", "r");
+    if (!fp) return 0;
+
+    char line[512];
+    int count = 0;
+    while (fgets(line, sizeof(line), fp)) {
+        char *p = line;
+        int id;
+        if (sscanf(p, "%d", &id) != 1) continue;
+
+        /* find first quote */
+        char *q = strchr(p, '\"');
+        if (!q) continue;
+        char *r = strchr(q + 1, '\"');
+        if (!r) continue;
+
+        char namebuf[50];
+        int nlen = (int)(r - (q + 1));
+        if (nlen <= 0) continue;
+        if (nlen >= (int)sizeof(namebuf))
+            nlen = sizeof(namebuf) - 1;
+        strncpy(namebuf, q + 1, nlen);
+        namebuf[nlen] = '\0';
+
+        unsigned int basic, hra, ded, gross;
+        if (sscanf(r + 1, "%u %u %u %u", &basic, &hra, &ded, &gross) != 4)
+            continue;
+
+        emp[count].id = id;
+        strncpy(emp[count].name, namebuf, sizeof(emp[count].name));
+        emp[count].name[sizeof(emp[count].name)-1] = '\0';
+        emp[count].basicSalary = basic;
+        emp[count].hra = hra;
+        emp[count].deductions = ded;
+        emp[count].grossSalary = gross;
+
+        count++;
+        if (count >= MAX) break;
+    }
+
+    fclose(fp);
+    return count;
+}
+
+/* ------------------ SAVE ENTIRE DATA ------------------ */
+void saveAllToFile(Employee emp[], int count) {
+    FILE *fp = fopen("employees.txt", "w");
+    if (!fp) {
+        perror("File error");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        /* write name in quotes so spaces are preserved */
+        fprintf(fp, "%d \"%s\" %u %u %u %u\n",
+                emp[i].id,
+                emp[i].name,
+                emp[i].basicSalary,
+                emp[i].hra,
+                emp[i].deductions,
+                emp[i].grossSalary);
+    }
+
+    fclose(fp);
+}
+
+/* ------------------ ADD EMPLOYEE ------------------ */
+int addEmployee(Employee emp[], int count) {
     if (count >= MAX) {
         printf("Error: Maximum limit reached!\n");
         return count;
@@ -65,13 +121,13 @@ int addEmployee(Employee emp[], int count) {
         while (!readInt(&tempID))
             printf("Invalid ID. Enter again: ");
 
-        // NEW: enforce ID range 1–100
+        /* enforce ID range 1–100 */
         if (tempID < 1 || tempID > 100) {
             printf("ID must be between 1 and 100. Enter again: ");
             continue;
         }
 
-        // Duplicate ID check
+        /* Duplicate ID check */
         if (idExists(emp, count, tempID)) {
             printf("ID already exists! Enter a new ID: ");
             continue;
@@ -82,42 +138,49 @@ int addEmployee(Employee emp[], int count) {
 
     emp[count].id = tempID;
 
-    // Name validation
+    /* Name input (allow spaces). Remove min length requirement. Keep alpha + space validation. */
     while (1) {
-        printf("Enter Name (min 8 chars): ");
-        fgets(emp[count].name, sizeof(emp[count].name), stdin);
-        emp[count].name[strcspn(emp[count].name, "\n")] = 0;
+        printf("Enter Name: ");
+        if (!fgets(emp[count].name, sizeof(emp[count].name), stdin)) {
+            emp[count].name[0] = '\0';
+        } else {
+            emp[count].name[strcspn(emp[count].name, "\n")] = '\0';
+        }
 
-        int len = strlen(emp[count].name);
         int valid = 1;
+        if (emp[count].name[0] == '\0') valid = 0;
 
-        if (len < 8) valid = 0;
-        if (len == 0) valid = 0;
-
-        for (int i = 0; emp[count].name[i]; i++)
-            if (!isalpha(emp[count].name[i]) && emp[count].name[i] != ' ')
+        for (int i = 0; emp[count].name[i]; i++) {
+            if (!isalpha((unsigned char)emp[count].name[i]) && emp[count].name[i] != ' ') {
                 valid = 0;
+                break;
+            }
+        }
 
         if (valid) break;
-        printf("Invalid name!\n");
+        printf("Invalid name! Use only letters and spaces.\n");
     }
 
-    printf("Enter Basic Salary: ");
-    while (!readFloat(&emp[count].basicSalary))
+    /* Salary fields (unsigned ints). Use readInt and cast */
+    int tmp;
+    printf("Enter Basic Salary (integer): ");
+    while (!readInt(&tmp))
         printf("Invalid! Enter again: ");
+    emp[count].basicSalary = (unsigned int)tmp;
 
-    printf("Enter HRA: ");
-    while (!readFloat(&emp[count].hra))
+    printf("Enter HRA (integer): ");
+    while (!readInt(&tmp))
         printf("Invalid! Enter again: ");
+    emp[count].hra = (unsigned int)tmp;
 
-    printf("Enter Deductions: ");
-    while (!readFloat(&emp[count].deductions))
+    printf("Enter Deductions (integer): ");
+    while (!readInt(&tmp))
         printf("Invalid! Enter again: ");
+    emp[count].deductions = (unsigned int)tmp;
 
-    emp[count].grossSalary =
-        calculateGross(emp[count].basicSalary,
-                       emp[count].hra,
-                       emp[count].deductions);
+    emp[count].grossSalary = calculateGross(emp[count].basicSalary,
+                                           emp[count].hra,
+                                           emp[count].deductions);
 
     saveAllToFile(emp, count + 1);
 
@@ -125,28 +188,7 @@ int addEmployee(Employee emp[], int count) {
     return count + 1;
 }
 
-// ------------------ SAVE ENTIRE DATA ------------------
-void saveAllToFile(Employee emp[], int count) {
-    FILE *fp = fopen("employees.txt", "w");
-    if (!fp) {
-        perror("File error");
-        return;
-    }
-
-    for (int i = 0; i < count; i++) {
-        fprintf(fp, "%d %s %.2f %.2f %.2f %.2f\n",
-                emp[i].id,
-                emp[i].name,
-                emp[i].basicSalary,
-                emp[i].hra,
-                emp[i].deductions,
-                emp[i].grossSalary);
-    }
-
-    fclose(fp);
-}
-
-// ------------------ DELETE EMPLOYEE ------------------
+/* ------------------ DELETE EMPLOYEE ------------------ */
 int deleteEmployee(Employee emp[], int count) {
     if (count == 0) {
         printf("No employees to delete.\n");
@@ -177,7 +219,7 @@ int deleteEmployee(Employee emp[], int count) {
     return count - 1;
 }
 
-// ------------------ UPDATE EMPLOYEE ------------------
+/* ------------------ UPDATE EMPLOYEE ------------------ */
 int updateEmployee(Employee emp[], int count) {
     if (count == 0) {
         printf("No employees to update.\n");
@@ -209,46 +251,50 @@ int updateEmployee(Employee emp[], int count) {
     while (!readInt(&choice))
         printf("Invalid! Enter again: ");
 
-    // --------- UPDATE NAME ---------
+    /* --------- UPDATE NAME --------- */
     if (choice == 1 || choice == 2) {
         while (1) {
-            printf("Enter new Name (min 8 chars): ");
-            fgets(emp[index].name, sizeof(emp[index].name), stdin);
-            emp[index].name[strcspn(emp[index].name, "\n")] = 0;
+            printf("Enter new Name: ");
+            if (!fgets(emp[index].name, sizeof(emp[index].name), stdin)) {
+                emp[index].name[0] = '\0';
+            } else {
+                emp[index].name[strcspn(emp[index].name, "\n")] = '\0';
+            }
 
-            int len = strlen(emp[index].name);
             int valid = 1;
-
-            if (len < 8) valid = 0;
+            if (emp[index].name[0] == '\0') valid = 0;
 
             for (int i = 0; emp[index].name[i]; i++)
-                if (!isalpha(emp[index].name[i]) && emp[index].name[i] != ' ')
+                if (!isalpha((unsigned char)emp[index].name[i]) && emp[index].name[i] != ' ')
                     valid = 0;
 
             if (valid) break;
-            printf("Invalid name!\n");
+            printf("Invalid name! Use only letters and spaces.\n");
         }
     }
 
-    // --------- UPDATE SALARY FIELDS ---------
+    /* --------- UPDATE SALARY FIELDS --------- */
     if (choice == 1 || choice == 3) {
-        printf("Enter Basic Salary: ");
-        while (!readFloat(&emp[index].basicSalary))
+        int tmp;
+        printf("Enter Basic Salary (integer): ");
+        while (!readInt(&tmp))
             printf("Invalid! Enter again: ");
+        emp[index].basicSalary = (unsigned int)tmp;
 
-        printf("Enter HRA: ");
-        while (!readFloat(&emp[index].hra))
+        printf("Enter HRA (integer): ");
+        while (!readInt(&tmp))
             printf("Invalid! Enter again: ");
+        emp[index].hra = (unsigned int)tmp;
 
-        printf("Enter Deductions: ");
-        while (!readFloat(&emp[index].deductions))
+        printf("Enter Deductions (integer): ");
+        while (!readInt(&tmp))
             printf("Invalid! Enter again: ");
+        emp[index].deductions = (unsigned int)tmp;
     }
 
-    emp[index].grossSalary =
-        calculateGross(emp[index].basicSalary,
-                       emp[index].hra,
-                       emp[index].deductions);
+    emp[index].grossSalary = calculateGross(emp[index].basicSalary,
+                                           emp[index].hra,
+                                           emp[index].deductions);
 
     saveAllToFile(emp, count);
 
@@ -257,7 +303,7 @@ int updateEmployee(Employee emp[], int count) {
     return count;
 }
 
-// ------------------ DISPLAY FILE ------------------
+/* ------------------ DISPLAY FILE ------------------ */
 void displaySavedFile() {
     FILE *fp = fopen("employees.txt", "r");
 
@@ -268,7 +314,7 @@ void displaySavedFile() {
 
     printf("\n===== Employee Records =====\n");
 
-    char line[200];
+    char line[512];
     while (fgets(line, sizeof(line), fp))
         printf("%s", line);
 

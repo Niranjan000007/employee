@@ -1,6 +1,7 @@
 #include "employee.h"
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 int menu() {
     int choice;
@@ -20,11 +21,10 @@ int menu() {
 
         int valid = 1;
         for (int i = 0; buf[i] && buf[i] != '\n'; i++)
-            if (!isdigit(buf[i])) valid = 0;
+            if (!isdigit((unsigned char)buf[i])) valid = 0;
 
         if (valid) return atoi(buf);
 
         printf("Invalid choice!\n");
     }
 }
-

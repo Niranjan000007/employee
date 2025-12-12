@@ -1,8 +1,15 @@
+#include <stdio.h>
 #include "employee.h"
+
+/* Directly include other C files */
+#include "employee.c"
+#include "menu.c"
 
 int main() {
     Employee emp[MAX];
-    int count = 0;
+    int count = loadFromFile(emp);
+    printf("Loaded %d employee record(s) from file.\n", count);
+
     int choice;
 
     while (1) {

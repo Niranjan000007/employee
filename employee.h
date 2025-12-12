@@ -7,17 +7,18 @@
 #define MAX 100
 
 typedef struct {
-    int id;
+    unsigned int id;
     char name[50];
-    float basicSalary;
-    float hra;
-    float deductions;
-    float grossSalary;
+    unsigned int basicSalary;
+    unsigned int hra;
+    unsigned int deductions;
+    unsigned int grossSalary;
 } Employee;
 
 int menu();
-float calculateGross(float basic, float hra, float deductions);
+unsigned int calculateGross(unsigned int basic, unsigned int hra, unsigned int deductions);
 int addEmployee(Employee emp[], int count);
+int loadFromFile(Employee emp[]);
 void displaySavedFile();
 int deleteEmployee(Employee emp[], int count);
 int updateEmployee(Employee emp[], int count);
