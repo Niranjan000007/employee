@@ -1,28 +1,29 @@
-#include <stdio.h>
-#include "employee.h"
+#ifndef EMPLOYEE_H
+#define EMPLOYEE_H
 
-#include "employee.c"
-#include "menu.c"
+#define MAX 100
 
-int main() {
-    Employee emp[MAX];
-    int count = loadFromFile(emp);
+typedef struct {
+    unsigned int id;
+    char name[50];
+    unsigned int basicSalary;
+    unsigned int hra;
+    unsigned int deductions;
+    unsigned int grossSalary;
+} Employee;
 
-    printf("Loaded %d employee record(s).\n", count);
+int menu();
+int loadFromFile(Employee emp[]);
+void saveAllToFile(Employee emp[], int count);
 
-    while (1) {
-        int choice = menu();
+int addEmployee(Employee emp[], int count);
+int deleteEmployee(Employee emp[], int count);
+int updateEmployee(Employee emp[], int count);
 
-        switch (choice) {
-            case 1: count = addEmployee(emp, count); break;
-            case 2: displaySavedFile(); break;
-            case 3: count = deleteEmployee(emp, count); break;
-            case 4: count = updateEmployee(emp, count); break;
-            case 5:
-                printf("Exiting...\n");
-                return 0;
-            default:
-                printf("Invalid choice.\n");
-        }
-    }
-}
+void displaySavedFile();
+
+unsigned int calculateGross(unsigned int basic,
+                            unsigned int hra,
+                            unsigned int deductions);
+
+#endif

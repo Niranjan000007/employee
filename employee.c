@@ -71,6 +71,17 @@ void saveAllToFile(Employee emp[], int count) {
     fclose(fp);
 }
 
+/* ---------- NAME VALIDATION (NO MIN LENGTH) ---------- */
+static int isValidName(const char *name) {
+    if (strlen(name) == 0) return 0;
+
+    for (int i = 0; name[i]; i++)
+        if (!isalpha((unsigned char)name[i]) && name[i] != ' ')
+            return 0;
+
+    return 1;
+}
+
 /* ---------- ADD EMPLOYEE ---------- */
 int addEmployee(Employee emp[], int count) {
     if (count >= MAX) {
@@ -88,23 +99,14 @@ int addEmployee(Employee emp[], int count) {
     }
     emp[count].id = value;
 
-    /* Name Input */
+    /* Name Input (NO MIN LENGTH) */
     while (1) {
-        printf("Enter Name (min 8 chars): ");
+        printf("Enter Name: ");
         fgets(emp[count].name, sizeof(emp[count].name), stdin);
         emp[count].name[strcspn(emp[count].name, "\n")] = 0;
 
-        int len = strlen(emp[count].name);
-        int valid = (len >= 8);
-
-        for (int i = 0; emp[count].name[i]; i++) {
-            if (!isalpha(emp[count].name[i]) &&
-                emp[count].name[i] != ' ')
-                valid = 0;
-        }
-
-        if (valid) break;
-        printf("Invalid name!\n");
+        if (isValidName(emp[count].name)) break;
+        printf("Invalid name! Only letters and spaces allowed.\n");
     }
 
     /* Salary Fields */
@@ -120,7 +122,6 @@ int addEmployee(Employee emp[], int count) {
     while (!readInt(&value)) printf("Invalid. Enter again: ");
     emp[count].deductions = value;
 
-    /* Gross Salary */
     emp[count].grossSalary = calculateGross(
         emp[count].basicSalary,
         emp[count].hra,
@@ -133,7 +134,7 @@ int addEmployee(Employee emp[], int count) {
     return count + 1;
 }
 
-/* ---------- DELETE ---------- */
+/* ---------- DELETE EMPLOYEE ---------- */
 int deleteEmployee(Employee emp[], int count) {
     if (count == 0) {
         printf("No employees.\n");
@@ -158,11 +159,12 @@ int deleteEmployee(Employee emp[], int count) {
         emp[i] = emp[i + 1];
 
     saveAllToFile(emp, count - 1);
+
     printf("Deleted.\n");
     return count - 1;
 }
 
-/* ---------- UPDATE ---------- */
+/* ---------- UPDATE EMPLOYEE ---------- */
 int updateEmployee(Employee emp[], int count) {
     if (count == 0) {
         printf("No employees.\n");
@@ -183,27 +185,19 @@ int updateEmployee(Employee emp[], int count) {
         return count;
     }
 
-    /* Name */
+    /* Update Name */
     while (1) {
-        printf("Enter new name (min 8 chars): ");
+        printf("Enter new Name: ");
         fgets(emp[index].name, sizeof(emp[index].name), stdin);
         emp[index].name[strcspn(emp[index].name, "\n")] = 0;
 
-        int len = strlen(emp[index].name);
-        int valid = (len >= 8);
-
-        for (int i = 0; emp[index].name[i]; i++)
-            if (!isalpha(emp[index].name[i]) &&
-                emp[index].name[i] != ' ')
-                valid = 0;
-
-        if (valid) break;
-        printf("Invalid!\n");
+        if (isValidName(emp[index].name)) break;
+        printf("Invalid name!\n");
     }
 
-    /* Salary Fields */
     int value;
 
+    /* Salary Fields */
     printf("Enter Basic Salary: ");
     while (!readInt(&value)) printf("Invalid.\n");
     emp[index].basicSalary = value;
